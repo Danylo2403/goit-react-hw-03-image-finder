@@ -1,4 +1,3 @@
-import React from 'react';
 import ReactModal from 'react-modal';
 import { ModalWindow } from './Modal.styled';
 
@@ -30,18 +29,14 @@ const customStyles = {
 
 ReactModal.setAppElement('#root');
 
-const Modal = ({ imageUrl, isModalOpen, closeModal }) => {
+export const Modal = ({ imageUrl, isModalOpen, closeModal }) => {
   return (
-    <ReactModal
+    <ModalWindow
       isOpen={isModalOpen}
       onRequestClose={closeModal}
       style={customStyles}
     >
-      <ModalWindow>
-        <img src={imageUrl} alt="This is the result of your search" />
-      </ModalWindow>
-    </ReactModal>
+      <img src={imageUrl} alt="This is result of your search" />
+    </ModalWindow>
   );
 };
-
-export default Modal;

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Modal from 'components/Modal/Modal';
+import {Modal} from 'components/Modal/Modal';
 import { ImageItem, Image } from './ImageGalleryItem.styled';
 
 class ImageGalleryItem extends Component {

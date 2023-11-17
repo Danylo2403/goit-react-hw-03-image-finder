@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { Component } from 'react';
 import { Blocks } from 'react-loader-spinner';
 import toast, { Toaster } from 'react-hot-toast';
 import { fetchImages } from 'utils/api';
+
 import SearchBar from './SearchBar/SearchBar';
 import ImageGallery from './ImageGallery/ImageGallery';
 import Button from './Button/Button';
@@ -13,70 +14,83 @@ const AppStyle = {
   paddingBottom: '24px',
 };
 
-const App = () => {
-  const [images, setImages] = useState([]);
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+export class App extends Component {
+  state = {
+    images: [],
+    query: '',
+    page: 1,
+    isLoading: false,
+  };
 
-  useEffect(() => {
-    const fetchData = async () => {
+  async componentDidUpdate(prevProps, prevState) {
+    if (
+      prevState.query !== this.state.query ||
+      prevState.page !== this.state.page
+    ) {
       try {
-        const queryWithoutId = query.slice(query.indexOf('/') + 1);
-        setIsLoading(true);
+        const queryWithoutId = this.state.query.slice(
+          this.state.query.indexOf('/') + 1
+        );
+        this.setState({ isLoading: true });
 
-        const fetchedImages = await fetchImages(queryWithoutId, page);
+        const fetchedImages = await fetchImages(
+          queryWithoutId,
+          this.state.page
+        );
 
-        setImages(prevImages => prevImages.concat(fetchedImages.hits));
-
-        const shouldLoadMore =
-          page < Math.ceil(fetchedImages.totalHits / 12);
-        setPage(prevPage => (shouldLoadMore ? prevPage + 1 : prevPage));
+        this.setState(prevState => {
+          return {
+            images: [...prevState.images, ...fetchedImages.hits],
+            loadMore: this.state.page < Math.ceil(fetchedImages.totalHits / 12),
+          };
+        });
       } catch (error) {
-        toast.error('Something went wrong! Please, try again :(');
+        toast.error('Something went wrong! Please, try again :(  ');
       } finally {
-        setIsLoading(false);
+        this.setState({ isLoading: false });
       }
-    };
-
-    if (query.trim() !== '') {
-      fetchData();
     }
-  }, [query, page]);
+  }
 
-  const handleSubmit = newQuery => {
-    if (!newQuery.trim()) {
+  handleSubmit = query => {
+    if (!query.trim()) {
       toast.error('Enter something to search');
       return;
     }
-
-    setImages([]);
-    setQuery(`${Date.now()}/${newQuery}`);
-    setPage(1);
+    this.setState(() => {
+      return {
+        images: [],
+        query: `${Date.now()}/${query}`,
+        page: 1,
+      };
+    });
   };
 
-  const handleLoadMore = () => {
-    setPage(prevPage => prevPage + 1);
+  handleLoadMore = () => {
+    this.setState(prevState => {
+      return { page: prevState.page + 1 };
+    });
   };
 
-  return (
-    <div style={AppStyle}>
-      <SearchBar onSubmit={handleSubmit} />
-      {isLoading && (
-        <Blocks
-          visible={true}
-          height="80"
-          width="80"
-          ariaLabel="blocks-loading"
-          wrapperStyle={{}}
-          wrapperClass="blocks-wrapper"
-        />
-      )}
-      {images.length > 0 && <ImageGallery imagesList={images} />}
-      {page > 1 && <Button handleClick={handleLoadMore} />}
-      <Toaster />
-    </div>
-  );
-};
-
-export default App;
+  render() {
+    const { images, isLoading, loadMore } = this.state;
+    return (
+      <div style={AppStyle}>
+        <SearchBar onSubmit={this.handleSubmit} />
+        {isLoading && (
+          <Blocks
+            visible={true}
+            height="80"
+            width="80"
+            ariaLabel="blocks-loading"
+            wrapperStyle={{}}
+            wrapperClass="blocks-wrapper"
+          />
+        )}
+        {images.length > 0 && <ImageGallery imagesList={images} />}
+        {loadMore && <Button handleClick={this.handleLoadMore} />}
+        <Toaster />
+      </div>
+    );
+  }
+}

@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   SearchBarStyled,
   SearchForm,
@@ -6,15 +7,16 @@ import {
   SearchIcon,
 } from './SearchBar.styled';
 
-export const SearchBar = ({ onSubmit }) => {
+const SearchBar = ({ onSubmit }) => {
+  const handleFormSubmit = (evt) => {
+    evt.preventDefault();
+    const query = evt.target.elements.query.value;
+    onSubmit(query);
+  };
+
   return (
     <SearchBarStyled>
-      <SearchForm
-        onSubmit={evt => {
-          evt.preventDefault();
-          onSubmit(evt.target.elements.query.value);
-        }}
-      >
+      <SearchForm onSubmit={handleFormSubmit}>
         <SearchButton type="submit">
           <SearchIcon />
         </SearchButton>
@@ -30,3 +32,5 @@ export const SearchBar = ({ onSubmit }) => {
     </SearchBarStyled>
   );
 };
+
+export default SearchBar;

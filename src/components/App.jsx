@@ -1,10 +1,10 @@
-import { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Blocks } from 'react-loader-spinner';
 import toast, { Toaster } from 'react-hot-toast';
 import { fetchImages } from 'utils/api';
-import {SearchBar} from './SearchBar/SearchBar';
-import { ImageGallery } from './ImageGallery/ImageGallery';
-import { Button } from './Button/Button';
+import SearchBar from './SearchBar/SearchBar';
+import ImageGallery from './ImageGallery/ImageGallery';
+import Button from './Button/Button';
 
 const AppStyle = {
   display: 'grid',
@@ -13,83 +13,70 @@ const AppStyle = {
   paddingBottom: '24px',
 };
 
-export class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    page: 1,
-    isLoading: false,
-  };
+const App = () => {
+  const [images, setImages] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
-  async componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.query !== this.state.query ||
-      prevState.page !== this.state.page
-    ) {
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const queryWithoutId = this.state.query.slice(
-          this.state.query.indexOf('/') + 1
-        );
-        this.setState({ isLoading: true });
+        const queryWithoutId = query.slice(query.indexOf('/') + 1);
+        setIsLoading(true);
 
-        const fetchedImages = await fetchImages(
-          queryWithoutId,
-          this.state.page
-        );
+        const fetchedImages = await fetchImages(queryWithoutId, page);
 
-        this.setState(prevState => {
-          return {
-            images: [...prevState.images, ...fetchedImages.hits],
-            loadMore: this.state.page < Math.ceil(fetchedImages.totalHits / 12),
-          };
-        });
+        setImages(prevImages => prevImages.concat(fetchedImages.hits));
+
+        const shouldLoadMore =
+          page < Math.ceil(fetchedImages.totalHits / 12);
+        setPage(prevPage => (shouldLoadMore ? prevPage + 1 : prevPage));
       } catch (error) {
-        toast.error('Something went wrong! Please, try again :(  ');
+        toast.error('Something went wrong! Please, try again :(');
       } finally {
-        this.setState({ isLoading: false });
+        setIsLoading(false);
       }
-    }
-  }
+    };
 
-  handleSubmit = query => {
-    if (!query.trim()) {
+    if (query.trim() !== '') {
+      fetchData();
+    }
+  }, [query, page]);
+
+  const handleSubmit = newQuery => {
+    if (!newQuery.trim()) {
       toast.error('Enter something to search');
       return;
     }
-    this.setState(() => {
-      return {
-        images: [],
-        query: `${Date.now()}/${query}`,
-        page: 1,
-      };
-    });
+
+    setImages([]);
+    setQuery(`${Date.now()}/${newQuery}`);
+    setPage(1);
   };
 
-  handleLoadMore = () => {
-    this.setState(prevState => {
-      return { page: prevState.page + 1 };
-    });
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  render() {
-    const { images, isLoading, loadMore } = this.state;
-    return (
-      <div style={AppStyle}>
-        <SearchBar onSubmit={this.handleSubmit} />
-        {isLoading && (
-          <Blocks
-            visible={true}
-            height="80"
-            width="80"
-            ariaLabel="blocks-loading"
-            wrapperStyle={{}}
-            wrapperClass="blocks-wrapper"
-          />
-        )}
-        {images.length > 0 && <ImageGallery imagesList={images} />}
-        {loadMore && <Button handleClick={this.handleLoadMore} />}
-        <Toaster />
-      </div>
-    );
-  }
-}
+  return (
+    <div style={AppStyle}>
+      <SearchBar onSubmit={handleSubmit} />
+      {isLoading && (
+        <Blocks
+          visible={true}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+        />
+      )}
+      {images.length > 0 && <ImageGallery imagesList={images} />}
+      {page > 1 && <Button handleClick={handleLoadMore} />}
+      <Toaster />
+    </div>
+  );
+};
+
+export default App;

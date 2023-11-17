@@ -1,9 +1,8 @@
-import { Component } from 'react';
-
-import { Modal } from 'components/Modal/Modal';
+import React, { Component } from 'react';
+import Modal from 'components/Modal/Modal';
 import { ImageItem, Image } from './ImageGalleryItem.styled';
 
-export class ImageGalleryItem extends Component {
+class ImageGalleryItem extends Component {
   state = {
     isModalOpen: false,
   };
@@ -23,12 +22,12 @@ export class ImageGalleryItem extends Component {
     return (
       <>
         <ImageItem onClick={this.openModal}>
-          <Image src={webformatURL} alt="This is result of your search" />
+          <Image src={webformatURL} alt="This is the result of your search" />
         </ImageItem>
         {isModalOpen && (
           <Modal
             imageUrl={largeImageURL}
-            isModalOpen={this.state.isModalOpen}
+            isModalOpen={isModalOpen}
             closeModal={this.closeModal}
           />
         )}
@@ -36,3 +35,5 @@ export class ImageGalleryItem extends Component {
     );
   }
 }
+
+export default ImageGalleryItem;
